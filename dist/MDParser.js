@@ -215,6 +215,7 @@
     };
 
     MDParser.prototype._parseTable = function(lines, startIndex) {
+        // 解析表头
         var headers = lines[startIndex].match(/^\|(.+)\|$/)[1].split('|').map(function(c) { 
             return c.trim(); 
         });
@@ -223,12 +224,23 @@
         var i = startIndex + 1;
         var rows = [];
         
-        while (i < lines.length && lines[i].match(/^\|.+\|$/)) {
-            var cells = lines[i].match(/^\|(.+)\|$/)[1].split('|').map(function(c) { 
-                return c.trim(); 
-            });
-            rows.push(cells);
-            i++;
+        // 收集数据行（排除分隔行）
+        while (i < lines.length) {
+            var line = lines[i].trim();
+            // 检查是否是表格行且不是分隔行
+            if (line.match(/^\|.+\|$/) && !line.match(/^\|[\s\-:|]+\|$/)) {
+                var cells = line.match(/^\|(.+)\|$/)[1].split('|').map(function(c) { 
+                    return c.trim(); 
+                });
+                rows.push(cells);
+                i++;
+            } else if (line.match(/^\|[\s\-:|]+\|$/)) {
+                // 分隔行，跳过
+                i++;
+            } else {
+                // 不是表格行，结束
+                break;
+            }
         }
 
         var html = '<table class="md-table"><thead><tr>';
